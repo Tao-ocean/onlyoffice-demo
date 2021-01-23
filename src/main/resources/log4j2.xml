@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" strict="true">
+    <Properties>
+        <!-- 本地开发时这个路径替换成自己的本地路径 -->
+        <Property name="local.logging.path">/home/webapp/log/</Property>
+        <Property name="project.name">onlyoffice-demo</Property>
+        <Property name="logging.file.path">${local.logging.path}/${project.name}</Property>
+        <Property name="logging.file.name">${sys:logging.file.path}/${project.name}-info</Property>
+        <Property name="logging.file.warn.name">${sys:logging.file.path}/${project.name}-warn</Property>
+        <Property name="logging.file.error.name">${sys:logging.file.path}/${project.name}-error</Property>
+        <Property name="layout">%d %p [%t] %c{10}:%M:%L %m%n</Property>
+    </Properties>
+    <!--按天产生日志文件，每个文件最大100MB，超过100MB以序号的方式存储，最多存10个，保留十天-->
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${layout}"/>
+        </Console>
+        <RollingRandomAccessFile name="RollingRandomAccessFile"
+                                 immediateFlush="true" fileName="${logging.file.name}.log"
+                                 filePattern="${logging.file.name}-%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="${layout}"/>
+            <ThresholdFilter level="debug"/>
+            <TimeBasedTriggeringPolicy/>
+            <SizeBasedTriggeringPolicy size="100 MB"/>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${local.logging.path}/${project.name}/" maxDepth="1">
+                    <IfFileName glob="*-info-*.log" />
+                    <!--!Note: 这里的age必须和filePattern协调, 后者是精确到HH, 这里就要写成xH, xd就不起作用
+                    另外, 数字最好>2, 否则可能造成删除的时候, 最近的文件还处于被占用状态,导致删除不成功!-->
+                    <!--10天-->
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="RollingRandomAccessFileWarn"
+                                 immediateFlush="true" fileName="${logging.file.warn.name}.log"
+                                 filePattern="${logging.file.warn.name}-%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="${layout}"/>
+            <ThresholdFilter level="warn"/>
+            <TimeBasedTriggeringPolicy/>
+            <SizeBasedTriggeringPolicy size="100 MB"/>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${local.logging.path}/${project.name}/" maxDepth="1">
+                    <IfFileName glob="*-warn-*.log" />
+                    <!--!Note: 这里的age必须和filePattern协调, 后者是精确到HH, 这里就要写成xH, xd就不起作用
+                    另外, 数字最好>2, 否则可能造成删除的时候, 最近的文件还处于被占用状态,导致删除不成功!-->
+                    <!--10天-->
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="RollingRandomAccessFileError"
+                                 immediateFlush="true" fileName="${logging.file.error.name}.log"
+                                 filePattern="${logging.file.error.name}-%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="${layout}"/>
+            <ThresholdFilter level="error"/>
+            <TimeBasedTriggeringPolicy/>
+            <SizeBasedTriggeringPolicy size="100 MB"/>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${local.logging.path}/${project.name}/" maxDepth="1">
+                    <IfFileName glob="*-error-*.log" />
+                    <!--!Note: 这里的age必须和filePattern协调, 后者是精确到HH, 这里就要写成xH, xd就不起作用
+                    另外, 数字最好>2, 否则可能造成删除的时候, 最近的文件还处于被占用状态,导致删除不成功!-->
+                    <!--10天-->
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.springframework" level="INFO"/>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingRandomAccessFile"/>
+            <AppenderRef ref="RollingRandomAccessFileWarn"/>
+            <AppenderRef ref="RollingRandomAccessFileError"/>
+        </Root>
+    </Loggers>
+</Configuration>
