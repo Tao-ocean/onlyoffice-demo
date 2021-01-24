@@ -23,3 +23,6 @@ mybatis-plus:
 logging:
   level:
     org.jeecg.modules.system.mapper: debug
+# 文件服务器地址
+fileserver:
+  upload: http://192.168.31.50:9520/upload

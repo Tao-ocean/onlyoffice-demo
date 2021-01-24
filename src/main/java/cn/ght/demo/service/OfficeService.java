@@ -8,10 +8,7 @@ import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @Author: ght
@@ -23,19 +20,10 @@ public class OfficeService {
     @Resource
     private FileMapper fileMapper;
 
-    public void saveFile(String fileMsg ) {
-        System.out.println(fileMsg);
-        try {
-            JSONObject jsonObj = (JSONObject) new JSONParser().parse(fileMsg);
-            String url = (String) jsonObj.get("url");
-            System.out.println("=======>"+url);
-
+    public void saveFile(String url ) {
             String fileName = url.substring(url.lastIndexOf("/") + 1);
-            System.out.println(fileName);
-            String type = fileName.substring(fileName.lastIndexOf(".")+1);
-            System.out.println("=======>"+type);
+            String type = getFileExtension(fileName);
             String key = generateKey();
-            System.out.println("========>"+key);
             File file = new File();
             String fileId = UUID.randomUUID().toString().replaceAll("-","");
             file.setFileId(fileId);
@@ -47,10 +35,6 @@ public class OfficeService {
             file.setHistStatus(1);
             file.setCreated(new Date());
             this.fileMapper.insert(file);
-
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
     }
 
     public List<File> getFileList() {
@@ -66,6 +50,12 @@ public class OfficeService {
             sb.append(str.charAt(number));
         }
         return sb.toString();
+    }
+
+    // 获取文件类型
+    private String getFileExtension(String fileName) {
+        String fileExt = fileName.substring(fileName.lastIndexOf(".") + 1);
+        return fileExt.toLowerCase(Locale.ROOT);
     }
 
 }

@@ -5,6 +5,7 @@ import cn.ght.demo.entity.HistData;
 import cn.ght.demo.service.EditorService;
 import cn.ght.demo.service.FileService;
 import cn.ght.demo.service.HistDataService;
+import cn.ght.demo.utils.FileUtils;
 import cn.ght.demo.utils.ResultMsg;
 import cn.hutool.core.io.resource.InputStreamResource;
 import cn.hutool.http.HttpUtil;
@@ -13,6 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +37,14 @@ import java.util.*;
 @RestController
 @RequestMapping("/test/")
 public class EditorController {
-    public static final String UPLOAD_PATH = "http://192.168.0.120:9570/group1/upload";
+
+    @Value("${fileserver.upload}")
+    private String upload;
+
+    @RequestMapping("value")
+    public Map<String,Object> test() {
+        return Collections.singletonMap("msg",upload);
+    }
 
     @Resource
     private FileService fileService;
@@ -74,20 +83,12 @@ public class EditorController {
             long status = (long) jsonObject.get("status");
             if (status == 2 || status ==3) {
                 String downloadUri = (String) jsonObject.get("url");
-                System.out.println(downloadUri);
                 String fileName = downloadUri.substring(downloadUri.lastIndexOf("/") + 1);
-                System.out.println("下载的文件名====>"+fileName);
-
-                URL url = new URL(downloadUri);
-                java.net.HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                InputStream is = connection.getInputStream();
-                MockMultipartFile multipartFile = new MockMultipartFile("out.dock","out.docx","",is);
                 // 更改之后的文件保存
-                String saveUrl = saveFile(multipartFile);
+                String saveUrl = FileUtils.downloadToFile(downloadUri,"out.dock");
                 // diff文件
                 String changesUrl = (String) jsonObject.get("changesurl");
-                MockMultipartFile diff = downloadToFile(changesUrl, "diff.zip");
-                String diffUrl = saveFile(diff);
+                String diffUrl = FileUtils.downloadToFile(changesUrl, "diff.zip");
 
                 // history
                 String changeshistory = (String) jsonObject.get("changeshistory");
@@ -140,34 +141,5 @@ public class EditorController {
             e.printStackTrace();
         }
         writer.write("{\"error\":0}");
-
-    }
-
-
-
-    private String saveFile(MultipartFile file) {
-
-        String result = "";
-        try {
-            InputStreamResource isr = new InputStreamResource(file.getInputStream(), file.getOriginalFilename());
-            Map<String, Object> params = new HashMap<>();
-            params.put("file", isr);
-            params.put("output", "json");
-            String resp = HttpUtil.post(UPLOAD_PATH, params);
-            com.alibaba.fastjson.JSONObject jsonObject = com.alibaba.fastjson.JSONObject.parseObject(resp);
-            String url = (String) jsonObject.get("url");
-            result = url;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-    private MockMultipartFile downloadToFile(String downloadUrl,String fileName) throws IOException {
-        URL url = new URL(downloadUrl);
-        java.net.HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        InputStream is = connection.getInputStream();
-        MockMultipartFile multipartFile = new MockMultipartFile(fileName,fileName,"",is);
-        return multipartFile;
     }
 }

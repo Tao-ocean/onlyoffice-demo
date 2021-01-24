@@ -29,7 +29,7 @@ public class EditorService {
 
     public HandleEditModel getEditMsg(Long id) {
         HandleEditModel model = new HandleEditModel();
-        model.setCallbackUrl("http://192.168.0.108:9520/test/save?fileId=");
+        model.setCallbackUrl("http://192.168.31.100:9520/test/save?fileId=");
         File file = this.fileMapper.selectById(id);
         if (file.getHistStatus() == 0) {
             List<HistData> histList = this.histDataMapper.selectList(new QueryWrapper<HistData>().eq("file_id", file.getFileId()));
@@ -82,6 +82,7 @@ public class EditorService {
             dto.setCreated("");
             dto.setVersion(data.getVersion());
             dto.setKey(data.getFileKey());
+            dto.setServerVersion("6.1.0");
             // TODO: 2021/1/20 查询修改人的信息
             List<VersionDto> list = new ArrayList<>();
             VersionDto versionDto = new VersionDto();
